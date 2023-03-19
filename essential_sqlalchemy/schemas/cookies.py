@@ -1,5 +1,5 @@
-from sqlalchemy import Table, Column, Integer, Numeric, String, CheckConstraint
 from essential_sqlalchemy.db.metadata import metadata
+from sqlalchemy import CheckConstraint, Column, Integer, Numeric, String, Table
 
 cookies = Table(
     "cookies",

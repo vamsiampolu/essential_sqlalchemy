@@ -1,10 +1,11 @@
-from sqlalchemy.sql import insert
-from essential_sqlalchemy.schemas.line_items import line_items
 from essential_sqlalchemy.models.line_items import LineItem, LineItemList
+from essential_sqlalchemy.schemas.line_items import line_items
+from sqlalchemy.sql import insert
+from sqlalchemy.engine import Connection
 
 
 class LineItems:
-    def __init__(self, connection) -> None:
+    def __init__(self, connection: Connection) -> None:
         self.connection = connection
 
     def insert_one(self, value: LineItem) -> int:

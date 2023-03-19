@@ -80,6 +80,7 @@ addopts = """\
     --no-cov-on-fail \
 """
 
+
 [tool.coverage.report]
 fail_under = 100
 exclude_lines = [

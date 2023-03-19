@@ -1,10 +1,12 @@
-from sqlalchemy.sql import insert, select
 from essential_sqlalchemy.models.user import User, UserList
 from essential_sqlalchemy.schemas import users
+from sqlalchemy.sql import insert, select
+
+from sqlalchemy.engine import Connection
 
 
 class Users:
-    def __init__(self, connection) -> None:
+    def __init__(self, connection: Connection) -> None:
         self.connection = connection
 
     def insert_one(self, user: User) -> int:
@@ -23,7 +25,7 @@ class Users:
 
         return res.rowcount
 
-    def read_all_users(self):
+    def read_all_users(self) -> UserList:
         s = select([users])
         rp = self.connection.execute(s)
         user_list = []

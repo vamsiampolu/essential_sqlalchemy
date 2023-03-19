@@ -1,31 +1,30 @@
+import json
 from dotenv import load_dotenv
 from pydantic import parse_obj_as
-import json
 
-from essential_sqlalchemy.models.user import User, UserList
+from sqlalchemy.engine import Connection
+from essential_sqlalchemy.crud.cookies_crud import Cookie, Cookies, CookiesMeta
+from essential_sqlalchemy.crud.line_items_crud import LineItems
+from essential_sqlalchemy.crud.orders_crud import Orders
 from essential_sqlalchemy.crud.users_crud import Users
+from essential_sqlalchemy.db.create_tables import create_tables, engine
+
 from essential_sqlalchemy.models.line_items import LineItemList
+from essential_sqlalchemy.models.customer_order import CustomerOrder, CustomerOrderList
+from essential_sqlalchemy.models.order import Order
+from essential_sqlalchemy.models.user import UserList
+from essential_sqlalchemy.models.cookie import CookieList
 
 from .config import Config
 
-from essential_sqlalchemy.db.create_tables import create_tables, engine
-
-from essential_sqlalchemy.crud.cookies_crud import Cookies, Cookie, CookiesMeta
-
-from essential_sqlalchemy.models.order import Order
-from essential_sqlalchemy.crud.orders_crud import Orders
-from essential_sqlalchemy.crud.line_items_crud import LineItems
-
-
 print("foobar")
 load_dotenv()
-config = Config()
+config = Config(DB_NAME="cookie_shop")
 print(config)
 
 create_tables()
 
-connection = engine.connect()
-
+connection: Connection = engine.connect()
 
 cookies_crud = Cookies(connection=connection)
 cookies_meta = CookiesMeta(connection=connection)
@@ -34,15 +33,17 @@ orders_crud = Orders(connection=connection)
 line_items_crud = LineItems(connection=connection)
 
 
-def dict_to_model(obj):
+def dict_to_model(obj: dict) -> Cookie:
     return Cookie(**obj)
 
 
-def model_to_json(obj):
+def model_to_json(
+    obj: Cookie | CookieList | CustomerOrder | CustomerOrderList | Order | UserList,
+) -> str:
     return obj.json()
 
 
-def init_cookies():
+def init_cookies() -> None:
     cookie = Cookie(
         cookie_name="chocolate chip",
         cookie_recipe_url="http://some.aweso.me/cookie/recipe.html",
@@ -76,7 +77,7 @@ def init_cookies():
     cookies_crud.insert_many(cookie_models)
 
 
-def init_customers():
+def init_customers() -> None:
     customer_list = [
         {
             "username": "cookiemon",
@@ -102,7 +103,7 @@ def init_customers():
     print(users_crud.insert_many(customers))
 
 
-def init_orders():
+def init_orders() -> None:
     order_one = Order(order_id=1, user_id=1)
     order_two = Order(order_id=2, user_id=2)
 
@@ -110,7 +111,7 @@ def init_orders():
     print(orders_crud.insert_one(order_two))
 
 
-def init_line_items():
+def init_line_items() -> None:
     items = [
         {"order_id": 1, "cookie_id": 1, "quantity": 2, "extended_cost": 1.00},
         {"order_id": 1, "cookie_id": 3, "quantity": 12, "extended_cost": 3.00},
@@ -123,38 +124,38 @@ def init_line_items():
     line_items_crud.insert_many(line_item_list)
 
 
-# init_customers()
-# init_cookies()
-# init_orders()
-# init_line_items()
+def init_db() -> None:
+    init_customers()
+    init_cookies()
+    init_orders()
+    init_line_items()
 
-# print(orders_crud.get_orders_by_customer_name("cookiemon").json())
 
-# print(json.dumps(orders_crud.get_order_count_per_user()))
+def run_queries() -> None:
+    print(orders_crud.get_orders_by_customer_name("cookiemon").json())
+    print(json.dumps(orders_crud.get_order_count_per_user()))
 
-# print(json.dumps(orders_crud.find_orders("cakeeater")))
+    print(json.dumps(orders_crud.find_orders("cakeeater")))
+    print(orders_crud.find_orders(customer_name="cakeeater", details=True))
 
-# print(orders_crud.find_orders(customer_name="cakeeater", details=True))
+    read_customers = users_crud.read_all_users()
+    print(read_customers.json())
 
-# read_customers = users_crud.read_all_users()
-# print(read_customers.json())
+    choco_chip = cookies_crud.find_one_by_name("chocolate chip")
+    print(choco_chip.json())
 
-# choco_chip = cookies.find_one_by_name("chocolate chip")
-# print(choco_chip.json())
+    best_selling_cookies = cookies_crud.get_top_n_cookies_by_quantity(2)
 
-# best_selling_cookies = cookies.get_top_n_cookies_by_quantity(2)
+    print(CookieList(__root__=best_selling_cookies).json())
+    print(cookies_meta.total_cookies_ordered())
+    print(cookies_meta.cookie_inventory())
 
-# print(CookieList(__root__=best_selling_cookies).json())
-# print(cookies_meta.total_cookies_ordered())
-# print(cookies_meta.cookie_inventory())
+    cookies_with_chocolate = cookies_crud.get_cookie_with_name_like("chocolate")
+    print(CookieList(__root__=cookies_with_chocolate).json())
 
-# cookies_with_chocolate = cookies.get_cookie_with_name_like("chocolate")
-# print(CookieList(__root__=cookies_with_chocolate).json())
+    cookies_meta.get_inventory_cost()
 
-# cookies_meta.get_inventory_cost()
+    print(cookies_crud.update_cookie_by_name("chocolate chip", {"quantity": 132}))
+    print(cookies_crud.remove_cookie_by_name("dark chocolate chip"))
 
-# print(cookies.update_cookie_by_name("chocolate chip", {"quantity": 132}))
-
-# print(cookies.remove_cookie_by_name("dark chocolate chip"))
-
-# print(cookies_crud.remove_all())
+    print(cookies_crud.remove_all())

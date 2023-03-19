@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Iterator, Any
+
 from pydantic import BaseModel, Field
 
 
@@ -27,8 +28,9 @@ class User(BaseModel):
 class UserList(BaseModel):
     __root__: List[User]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[User]:  # type: ignore[override]
+        iter(self.__root__)
         return iter(self.__root__)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Any:
         return self.__root__[item]

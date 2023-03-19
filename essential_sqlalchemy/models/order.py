@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Iterator, Any
 
 
 class Order(BaseModel):
@@ -13,8 +14,8 @@ class Order(BaseModel):
 class OrderList(BaseModel):
     __root__: list[Order]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Order]:  # type: ignore[override]
         return iter(self.__root__)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Any:
         return self.__root__[item]

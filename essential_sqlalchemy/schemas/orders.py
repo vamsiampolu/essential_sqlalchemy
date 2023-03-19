@@ -1,6 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey
-from sqlalchemy import Table, Column, Integer
 from essential_sqlalchemy.db.metadata import metadata
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, Table
 
 orders = Table(
     "orders",

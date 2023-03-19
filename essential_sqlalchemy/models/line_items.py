@@ -1,5 +1,6 @@
+from typing import List, Iterator, Any
+
 from pydantic import BaseModel, Field
-from typing import List
 
 
 class LineItem(BaseModel):
@@ -15,8 +16,8 @@ class LineItem(BaseModel):
 class LineItemList(BaseModel):
     __root__: List[LineItem]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[LineItem]:  # type: ignore[override]
         return iter(self.__root__)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Any:
         return self.__root__[item]

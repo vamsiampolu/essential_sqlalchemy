@@ -1,6 +1,7 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Integer, String, Table, Column
+
 from essential_sqlalchemy.db.metadata import metadata
+from sqlalchemy import Column, DateTime, Integer, String, Table
 
 users = Table(
     "users",
