@@ -7,5 +7,5 @@ orders = Table(
     metadata,
     Column("order_id", Integer(), primary_key=True),
     Column("user_id", ForeignKey("users.user_id")),
-    Column("shipped", Boolean(), default=False)
+    Column("shipped", Boolean(), default=False),
 )

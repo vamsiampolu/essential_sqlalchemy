@@ -7,7 +7,7 @@ class Cookie(BaseModel):
     cookie_name: str = Field(max_length=50)
     cookie_recipe_url: str = Field(max_length=255)
     cookie_sku: str = Field(max_length=55)
-    quantity: int = Field(gt=0, description='Quantity of cookies')
+    quantity: int = Field(gt=0, description="Quantity of cookies")
     unit_cost: float
 
     class Config:

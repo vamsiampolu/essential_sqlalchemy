@@ -122,6 +122,7 @@ def init_line_items():
 
     line_items_crud.insert_many(line_item_list)
 
+
 # init_customers()
 # init_cookies()
 # init_orders()
