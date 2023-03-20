@@ -1,3 +1,8 @@
 from sqlalchemy import create_engine
+from essential_sqlalchemy.config import Config
 
-engine = create_engine("sqlite:///cookie_shop.db", echo=True)
+print("Inside db.engine")
+db_name = Config().DB_NAME
+
+print(f"The {db_name} is the db to be used")
+engine = create_engine(f"sqlite:///{db_name}.db", echo=True)

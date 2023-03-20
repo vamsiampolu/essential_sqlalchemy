@@ -25,6 +25,7 @@ class Cookies:
         print(str(ins))
         print(ins.compile().params)
         result = self.connection.execute(ins)
+        print(result)
         return result.inserted_primary_key
 
     def insert_many(self, cookies_list: list[Cookie]) -> CursorResult:

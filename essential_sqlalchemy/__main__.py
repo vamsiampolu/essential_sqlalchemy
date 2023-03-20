@@ -1,5 +1,4 @@
 import json
-from dotenv import load_dotenv
 from pydantic import parse_obj_as
 
 from sqlalchemy.engine import Connection
@@ -14,13 +13,6 @@ from essential_sqlalchemy.models.customer_order import CustomerOrder, CustomerOr
 from essential_sqlalchemy.models.order import Order
 from essential_sqlalchemy.models.user import UserList
 from essential_sqlalchemy.models.cookie import CookieList
-
-from .config import Config
-
-print("foobar")
-load_dotenv()
-config = Config(DB_NAME="cookie_shop")
-print(config)
 
 create_tables()
 
