@@ -1,6 +1,6 @@
 from essential_sqlalchemy.models.cookie import Cookie
 from essential_sqlalchemy.schemas.cookies import cookies
-from sqlalchemy.sql import cast, delete, func, select, update
+from sqlalchemy.sql import cast, delete, func, select, update, functions, desc
 from sqlalchemy.sql.sqltypes import Numeric
 
 from typing import TypedDict, cast as type_cast
@@ -22,11 +22,14 @@ class Cookies:
 
     def insert_one(self, cookie: Cookie) -> Row:
         ins = cookies.insert().values(**cookie.dict())
-        print(str(ins))
-        print(ins.compile().params)
         result = self.connection.execute(ins)
         print(result)
         return result.inserted_primary_key
+
+    def get_cookie_rows_count(self) -> int:
+        sel = select(functions.count()).select_from(cookies)
+        res = self.connection.execute(sel)
+        return int(res.scalar_one())
 
     def insert_many(self, cookies_list: list[Cookie]) -> CursorResult:
         ins = cookies.insert()
@@ -67,15 +70,19 @@ class Cookies:
             cookie_records.append(item)
         return cookie_records
 
-    def find_one_by_name(self, cookie_name: str) -> Cookie:
+    def find_one_by_name(self, cookie_name: str) -> Cookie | None:
         s = select([cookies]).where(cookies.c.cookie_name == cookie_name)
-        rp = self.connection.execute(s)
+        rp: CursorResult = self.connection.execute(s)
+
         record = rp.first()
-        return Cookie.from_orm(record)
+
+        if record is not None:
+            return Cookie.from_orm(record)
+        return None
 
     def get_top_n_cookies_by_quantity(self, n: int) -> list[Cookie]:
         s = select([cookies])
-        s = s.order_by(cookies.c.quantity)
+        s = s.order_by(desc(cookies.c.quantity))
         s = s.limit(n)
 
         rp = self.connection.execute(s)

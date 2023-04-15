@@ -1,6 +1,6 @@
-from .engine import engine
+from sqlalchemy.engine import Engine
 from .metadata import metadata
 
 
-def create_tables() -> None:
+def create_tables(engine: Engine) -> None:
     metadata.create_all(engine)

@@ -6,7 +6,10 @@ from essential_sqlalchemy.crud.cookies_crud import Cookie, Cookies, CookiesMeta
 from essential_sqlalchemy.crud.line_items_crud import LineItems
 from essential_sqlalchemy.crud.orders_crud import Orders
 from essential_sqlalchemy.crud.users_crud import Users
-from essential_sqlalchemy.db.create_tables import create_tables, engine
+
+from essential_sqlalchemy.config import Config
+from essential_sqlalchemy.db.engine import get_engine
+from essential_sqlalchemy.db.create_tables import create_tables
 
 from essential_sqlalchemy.models.line_items import LineItemList
 from essential_sqlalchemy.models.customer_order import CustomerOrder, CustomerOrderList
@@ -14,15 +17,36 @@ from essential_sqlalchemy.models.order import Order
 from essential_sqlalchemy.models.user import UserList
 from essential_sqlalchemy.models.cookie import CookieList
 
-create_tables()
+from typing_extensions import TypedDict
 
-connection: Connection = engine.connect()
 
-cookies_crud = Cookies(connection=connection)
-cookies_meta = CookiesMeta(connection=connection)
-users_crud = Users(connection=connection)
-orders_crud = Orders(connection=connection)
-line_items_crud = LineItems(connection=connection)
+class Crud(TypedDict):
+    cookies_crud: Cookies
+    cookies_meta: CookiesMeta
+    users_crud: Users
+    orders_crud: Orders
+    line_items_crud: LineItems
+
+
+def init_crud() -> Crud:
+    config = Config(env_file=".env")
+    engine = get_engine(config)
+    connection: Connection = engine.connect()
+    create_tables(engine=engine)
+
+    cookies_crud = Cookies(connection=connection)
+    cookies_meta = CookiesMeta(connection=connection)
+    users_crud = Users(connection=connection)
+    orders_crud = Orders(connection=connection)
+    line_items_crud = LineItems(connection=connection)
+
+    return {
+        "cookies_crud": cookies_crud,
+        "cookies_meta": cookies_meta,
+        "users_crud": users_crud,
+        "orders_crud": orders_crud,
+        "line_items_crud": line_items_crud,
+    }
 
 
 def dict_to_model(obj: dict) -> Cookie:
@@ -35,7 +59,7 @@ def model_to_json(
     return obj.json()
 
 
-def init_cookies() -> None:
+def init_cookies(cookies_crud: Cookies) -> None:
     cookie = Cookie(
         cookie_name="chocolate chip",
         cookie_recipe_url="http://some.aweso.me/cookie/recipe.html",
@@ -69,7 +93,7 @@ def init_cookies() -> None:
     cookies_crud.insert_many(cookie_models)
 
 
-def init_customers() -> None:
+def init_customers(users_crud: Users) -> None:
     customer_list = [
         {
             "username": "cookiemon",
@@ -95,7 +119,7 @@ def init_customers() -> None:
     print(users_crud.insert_many(customers))
 
 
-def init_orders() -> None:
+def init_orders(orders_crud: Orders) -> None:
     order_one = Order(order_id=1, user_id=1)
     order_two = Order(order_id=2, user_id=2)
 
@@ -103,7 +127,7 @@ def init_orders() -> None:
     print(orders_crud.insert_one(order_two))
 
 
-def init_line_items() -> None:
+def init_line_items(line_items_crud: LineItems) -> None:
     items = [
         {"order_id": 1, "cookie_id": 1, "quantity": 2, "extended_cost": 1.00},
         {"order_id": 1, "cookie_id": 3, "quantity": 12, "extended_cost": 3.00},
@@ -116,14 +140,12 @@ def init_line_items() -> None:
     line_items_crud.insert_many(line_item_list)
 
 
-def init_db() -> None:
-    init_customers()
-    init_cookies()
-    init_orders()
-    init_line_items()
-
-
-def run_queries() -> None:
+def run_queries(
+    orders_crud: Orders,
+    users_crud: Users,
+    cookies_crud: Cookies,
+    cookies_meta: CookiesMeta,
+) -> None:
     print(orders_crud.get_orders_by_customer_name("cookiemon").json())
     print(json.dumps(orders_crud.get_order_count_per_user()))
 
@@ -134,7 +156,8 @@ def run_queries() -> None:
     print(read_customers.json())
 
     choco_chip = cookies_crud.find_one_by_name("chocolate chip")
-    print(choco_chip.json())
+    if choco_chip is not None:
+        print(choco_chip.json())
 
     best_selling_cookies = cookies_crud.get_top_n_cookies_by_quantity(2)
 
