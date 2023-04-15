@@ -370,3 +370,129 @@ def test_get_cookies_with_name_like_multiple_matches(connection: Connection) -> 
     assert lists_have_same_values_ignoring_order_of_elements(
         cookie_names, ["choc chip", "triple choc"]
     )
+
+
+def test_update_cookie_by_name(connection: Connection) -> None:
+    cookies = Cookies(connection)
+
+    choc_chip_cookie = Cookie(
+        cookie_name="choc chip",
+        cookie_recipe_url="http://some.yum.my/cookie/choc-chip.html",
+        cookie_sku="CC01",
+        quantity=225,
+        unit_cost=0.40,
+    )
+
+    transaction = connection.begin()
+    cookies.insert_one(choc_chip_cookie)
+    transaction.commit()
+
+    inserted_cookie = cookies.find_one_by_name("choc chip")
+
+    assert inserted_cookie is not None
+    assert inserted_cookie.quantity == 225
+
+    transaction = connection.begin()
+    cookies.update_cookie_by_name(
+        "choc chip",
+        {
+            "quantity": 150,
+        },
+    )
+    transaction.commit()
+
+    updated_cookie = cookies.find_one_by_name("choc chip")
+
+    assert updated_cookie is not None
+    assert updated_cookie.quantity == 150
+
+
+def test_update_when_cookie_does_not_exist(connection: Connection) -> None:
+    cookies = Cookies(connection)
+
+    assert cookies.get_cookie_rows_count() == 0
+
+    updated_count = cookies.update_cookie_by_name("choc chip", {"quantity": 25})
+
+    assert updated_count == 0
+    assert cookies.get_cookie_rows_count() == 0
+
+
+def test_remove_cookie_by_name(connection: Connection) -> None:
+    cookies = Cookies(connection)
+
+    cookie = Cookie(
+        cookie_name="vanilla raspberry",
+        cookie_recipe_url="https://example.com/recipe/vanilla_raspberry",
+        cookie_sku="white_ras_444",
+        quantity=35,
+        unit_cost=16.00,
+    )
+
+    transaction = connection.begin()
+    cookies.insert_one(cookie)
+    transaction.commit()
+
+    assert cookies.get_cookie_rows_count() == 1
+
+    transaction = connection.begin()
+    removed_count = cookies.remove_cookie_by_name("vanilla raspberry")
+    transaction.commit()
+
+    assert removed_count == 1
+    assert cookies.get_cookie_rows_count() == 0
+
+
+def test_remove_cookie_not_exists(connection: Connection) -> None:
+    cookies = Cookies(connection)
+    assert cookies.remove_cookie_by_name("choc chip") == 0
+
+
+def test_remove_all_cookies(connection: Connection) -> None:
+    cookies = Cookies(connection)
+
+    triple_choc_cookie = Cookie(
+        cookie_name="triple choc",
+        cookie_recipe_url="https://example.com/recipe/triple_choc",
+        cookie_sku="triple_choc_350",
+        quantity=42,
+        unit_cost=10.00,
+    )
+
+    choc_chip_cookie = Cookie(
+        cookie_name="choc chip",
+        cookie_recipe_url="https://example.com/recipe/choc_chip",
+        cookie_sku="choc_chip_123",
+        quantity=25,
+        unit_cost=12.50,
+    )
+
+    vanilla_raspberry = Cookie(
+        cookie_name="vanilla raspberry",
+        cookie_recipe_url="https://example.com/recipe/vanilla_raspberry",
+        cookie_sku="white_ras_444",
+        quantity=35,
+        unit_cost=16.00,
+    )
+
+    white_choc_chip = Cookie(
+        cookie_name="white choc chip",
+        cookie_recipe_url="https://example.com/recipe/white-chip",
+        cookie_sku="white_choc_213",
+        quantity=41,
+        unit_cost=7.50,
+    )
+
+    inventory_list = [
+        triple_choc_cookie,
+        choc_chip_cookie,
+        vanilla_raspberry,
+        white_choc_chip,
+    ]
+
+    transaction = connection.begin()
+    cookies.insert_many(inventory_list)
+    transaction.commit()
+
+    assert cookies.get_cookie_rows_count() == 4
+    assert cookies.remove_all() == 4
